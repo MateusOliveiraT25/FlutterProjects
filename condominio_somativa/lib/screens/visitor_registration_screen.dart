@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:image_picker/image_picker.dart'; // Para escolher imagens da galeria ou câmera
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
 
 class VisitorRegistrationScreen extends StatefulWidget {
   const VisitorRegistrationScreen({super.key});
@@ -11,29 +12,38 @@ class VisitorRegistrationScreen extends StatefulWidget {
 }
 
 class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
-  final GlobalKey qrKey = GlobalKey();
-  QRViewController? controller;
-  String qrCodeResult = "";
   final TextEditingController nameController = TextEditingController();
   final TextEditingController documentController = TextEditingController();
+  String qrCodeResult = ""; // Resultado do QR code
+  File? _image; // Imagem selecionada do QR code
 
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (controller != null) {
-      controller!.pauseCamera();
+  final picker = ImagePicker();
+
+  Future<void> _scanQRCodeFromGallery() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+      _processQRCode();
     }
   }
 
-  void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      this.controller = controller;
-    });
-    controller.scannedDataStream.listen((scanData) {
+  Future<void> _scanQRCodeFromCamera() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
       setState(() {
-        qrCodeResult = scanData.code ?? "";
+        _image = File(pickedFile.path);
       });
-    });
+      _processQRCode();
+    }
+  }
+
+  Future<void> _processQRCode() async {
+    // Aqui você deve implementar a lógica para processar o QR code da imagem `_image`
+    // Para simplificação, estamos simulando o processamento
+    qrCodeResult = "Resultado de exemplo"; // Substitua pelo processamento real
+    setState(() {});
   }
 
   Future<void> _registerVisitor() async {
@@ -77,12 +87,29 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
         children: [
           Expanded(
             flex: 2,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
+            child: Column(
+              children: [
+                _image != null
+                    ? Image.file(_image!)
+                    : const Text('Nenhuma imagem selecionada'),
+                Text('Resultado: $qrCodeResult'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _scanQRCodeFromGallery,
+                      child: const Text('Escolher da Galeria'),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: _scanQRCodeFromCamera,
+                      child: const Text('Usar Câmera'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          Text('Resultado: $qrCodeResult'),
           Expanded(
             flex: 3,
             child: Padding(
@@ -110,10 +137,5 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
       ),
     );
   }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
-  }
 }
+  

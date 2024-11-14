@@ -1,12 +1,12 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
-    id 'com.google.gms.google-services' version '4.3.15' apply false  // Atualizando o plugin
 }
 
 android {
-    namespace = "com.example.condominio_app"
+    namespace = "com.example.condominio_somativa"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +20,8 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.condominio_app"
-        minSdk = flutter.minSdkVersion
+        applicationId = "com.example.condominio_somativa"
+        minSdk = 23 // Altere para 23 ou superior
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -34,14 +34,6 @@ android {
     }
 }
 
-dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
-    implementation 'com.google.firebase:firebase-auth'  // Dependência de autenticação
-    implementation 'com.google.firebase:firebase-analytics'  // Firebase Analytics
-}
-
 flutter {
     source = "../.."
 }
-
-apply plugin: 'com.google.gms.google-services'
