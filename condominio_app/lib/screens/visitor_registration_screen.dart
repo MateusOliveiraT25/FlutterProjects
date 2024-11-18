@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart'; // Novo pacote importado
 import 'package:firebase_auth/firebase_auth.dart';
 
 class VisitorRegistrationScreen extends StatefulWidget {
@@ -11,28 +11,20 @@ class VisitorRegistrationScreen extends StatefulWidget {
 }
 
 class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
-  final GlobalKey qrKey = GlobalKey();
-  QRViewController? controller;
+  MobileScannerController cameraController = MobileScannerController(); // Controlador da câmera
   String qrCodeResult = "";
   final TextEditingController nameController = TextEditingController();
   final TextEditingController documentController = TextEditingController();
 
   @override
-  void reassemble() {
-    super.reassemble();
-    if (controller != null) {
-      controller!.pauseCamera();
-    }
+  void dispose() {
+    cameraController.dispose(); // Dispose do controlador ao sair
+    super.dispose();
   }
 
-  void _onQRViewCreated(QRViewController controller) {
+  void _onScan(MobileScannerArguments args) {
     setState(() {
-      this.controller = controller;
-    });
-    controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        qrCodeResult = scanData.code ?? "";
-      });
+      qrCodeResult = args.rawData; // Recebe o dado lido pelo scanner
     });
   }
 
@@ -77,9 +69,9 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
         children: [
           Expanded(
             flex: 2,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
+            child: MobileScanner(
+              controller: cameraController,
+              onDetect: _onScan, // Defina o callback para quando um QR code for detectado
             ),
           ),
           Text('Resultado: $qrCodeResult'),
@@ -109,11 +101,5 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
   }
 }
