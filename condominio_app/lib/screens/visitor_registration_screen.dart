@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
 class VisitorRegistrationScreen extends StatefulWidget {
@@ -17,13 +16,8 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
 
   Future<void> _saveVisitor() async {
     try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Você precisa estar logado!')),
-        );
-        return;
-      }
+      // Remover a verificação de login
+      // FirebaseAuth.instance.currentUser não é mais necessário
 
       final visitorData = {
         'nome': nameController.text,
