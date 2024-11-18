@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'screens/login_screen.dart';
-import 'screens/register_screen.dart';
-import 'screens/visitor_registration_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'home_screen.dart'; // Tela inicial
+import 'visitor_registration_screen.dart'; // Tela de registro
+import 'generate_qr_code_screen.dart'; // Tela de QR Code
+import 'scanner_screen.dart'; // Tela de scanner
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const MyApp());
+void main() {
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -18,17 +14,32 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Controle de Acesso de Visitantes',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/visitor-registration': (context) => const VisitorRegistrationScreen(),
-      },
+    final GoRouter _router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/registerVisitor',
+          builder: (context, state) => const VisitorRegistrationScreen(),
+        ),
+        GoRoute(
+          path: '/generateQrCode',
+          builder: (context, state) {
+            final visitorInfo = state.extra as Map<String, dynamic>;
+            return GenerateQrCodeScreen(visitorInfo: visitorInfo);
+          },
+        ),
+        GoRoute(
+          path: '/scanQrCode',
+          builder: (context, state) => const ScannerScreen(),
+        ),
+      ],
+    );
+
+    return MaterialApp.router(
+      routerConfig: _router,
     );
   }
 }
