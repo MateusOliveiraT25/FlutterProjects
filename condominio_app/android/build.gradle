@@ -1,46 +1,33 @@
-plugins {
-    id "com.android.application"
-    id "kotlin-android"
-    id "dev.flutter.flutter-gradle-plugin"
+// Repositórios de dependências para o projeto
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
 }
 
-android {
-    namespace = "com.example.condominio_app"
-    compileSdk = 34
+// Definir o diretório de build do projeto raiz
+rootProject.buildDir = "../build"
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
+// Configuração para todos os subprojetos
+subprojects {
+    // Define o diretório de build específico para cada subprojeto
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
-    defaultConfig {
-        applicationId = "com.example.condominio_app"
-        minSdk = 21
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
-    }
-
-    buildTypes {
-        release {
-            signingConfig = signingConfigs.debug
-        }
-    }
-
-    // Adicionando namespace ao módulo do qr_code_scanner
-    configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'qr_code_scanner') {
-                details.useTarget group: details.requested.group, name: details.requested.name, version: '1.0'
+    // Forçar o uso de jvmTarget = 1.8 para todas as tarefas Kotlin
+    afterEvaluate {
+        if (project.hasProperty("kotlinOptions")) {
+            project.kotlinOptions {
+                jvmTarget = "1.8"
             }
         }
     }
+
+    // Definir dependências de avaliação
+    project.evaluationDependsOn(":app")
 }
 
-flutter {
-    source = "../.."
+// Tarefa de limpeza para o diretório de build do projeto raiz
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
 }

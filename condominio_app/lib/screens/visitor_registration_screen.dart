@@ -1,119 +1,98 @@
+import 'package:condominio_app/screens/generate_qr_code_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class VisitorRegistrationScreen extends StatefulWidget {
   const VisitorRegistrationScreen({super.key});
 
   @override
-  _VisitorRegistrationScreenState createState() => _VisitorRegistrationScreenState();
+  _VisitorRegistrationScreenState createState() =>
+      _VisitorRegistrationScreenState();
 }
 
 class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
-  final GlobalKey qrKey = GlobalKey();
-  QRViewController? controller;
-  String qrCodeResult = "";
   final TextEditingController nameController = TextEditingController();
   final TextEditingController documentController = TextEditingController();
 
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (controller != null) {
-      controller!.pauseCamera();
-    }
-  }
-
-  void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      this.controller = controller;
-    });
-    controller.scannedDataStream.listen((scanData) {
-      setState(() {
-        qrCodeResult = scanData.code ?? "";
-      });
-    });
-  }
-
-  Future<void> _registerVisitor() async {
-    try {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Você precisa estar logado!')),
-        );
-        return;
-      }
-
-      await FirebaseFirestore.instance.collection('visitantes').add({
-        'nome': nameController.text,
-        'documento': documentController.text,
-        'qr_code': qrCodeResult,
-        'horario_entrada': DateTime.now(),
-        'uid': currentUser.uid,
-      });
-
-      // Limpar os campos após o envio
-      nameController.clear();
-      documentController.clear();
-      qrCodeResult = "";
-
+  // Função para passar as informações diretamente para a tela de QR Code
+  void _generateQrCode() {
+    // Verificando se os campos não estão vazios ou apenas com espaços em branco
+    if (nameController.text.trim().isEmpty || documentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Visitante registrado com sucesso!')),
+        const SnackBar(content: Text('Por favor, preencha todos os campos')),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao registrar visitante: $e')),
-      );
+      return;
     }
+
+    // Informações para o QR Code
+    final visitorInfo = {
+      'nome': nameController.text.trim(),
+      'documento': documentController.text.trim(),
+    };
+
+    // Navegar para a tela de geração de QR Code
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GenerateQrCodeScreen(visitorInfo: visitorInfo),
+      ),
+    );
+
+    // Limpar os campos de entrada
+    nameController.clear();
+    documentController.clear();
+
+    // Mostrar mensagem de sucesso
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('QR Code gerado com sucesso!')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Registro de Visitante')),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 2,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-            ),
-          ),
-          Text('Resultado: $qrCodeResult'),
-          Expanded(
-            flex: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Nome'),
-                  ),
-                  TextField(
-                    controller: documentController,
-                    decoration: const InputDecoration(labelText: 'Documento'),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _registerVisitor,
-                    child: const Text('Registrar Visitante'),
-                  ),
-                ],
+      appBar: AppBar(
+        title: const Text('Registro de Visitante'),
+        backgroundColor: Colors.green, // Cor verde na barra de navegação
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Campo para nome
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nome',
+                border: OutlineInputBorder(),
+                hintText: 'Digite o nome do visitante',
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            // Campo para documento
+            TextField(
+              controller: documentController,
+              decoration: const InputDecoration(
+                labelText: 'Documento',
+                border: OutlineInputBorder(),
+                hintText: 'Digite o documento do visitante',
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Botão de gerar QR Code
+            ElevatedButton(
+              onPressed: _generateQrCode,
+              child: const Text('Gerar QR Code'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50), backgroundColor: Colors.green, // Largura do botão expandida
+                textStyle: const TextStyle(fontSize: 16), // Cor verde no botão
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    controller?.dispose();
-    super.dispose();
   }
 }
